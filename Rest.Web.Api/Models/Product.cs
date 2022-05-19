@@ -14,4 +14,11 @@ namespace Rest.Web.Api.Models
 
 
     }
+
+
+    public class ProductUpdateDto
+    {
+        public float Price { get; set; }
+
+    }
 }
