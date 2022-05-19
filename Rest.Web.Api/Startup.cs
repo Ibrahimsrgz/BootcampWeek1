@@ -44,6 +44,7 @@ namespace Rest.Web.Api
                 app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "Rest.Web.Api v1"));
             }
 
+
             app.UseRouting();
 
             app.UseAuthorization();
