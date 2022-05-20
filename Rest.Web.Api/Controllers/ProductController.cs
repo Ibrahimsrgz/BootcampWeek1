@@ -21,6 +21,7 @@ namespace Rest.Web.Api.Controllers
                 Category = "Telefon",
                 Name = "Iphone",
                 Price = 1000,
+                Stock =2,
                 IsDeleted = false,
                 CreatedAt = new DateTime(2022,05,18),
                 UpdateAt = new DateTime(2022,05,18)
@@ -33,6 +34,7 @@ namespace Rest.Web.Api.Controllers
                 Category = "Bilgisayar",
                 Name = "Monster",
                 Price = 4000,
+                Stock =4,
                 IsDeleted = false,
                 CreatedAt = new DateTime(2022,05,18),
                 UpdateAt = new DateTime(2022,05,18)
@@ -45,6 +47,7 @@ namespace Rest.Web.Api.Controllers
                 Category = "Televizyon",
                 Name = "LG",
                 Price = 5000,
+                Stock =5,
                 IsDeleted = false,
                 CreatedAt = new DateTime(2022,05,18),
                 UpdateAt = new DateTime(2022,05,18)
@@ -54,44 +57,104 @@ namespace Rest.Web.Api.Controllers
 
         };
 
-
         [HttpGet]
-        public List<Product> GetProducts()
+        public IActionResult GetProducts()
         {
-            var productList = ProductList;
-            return productList;
+            return Ok(ProductList);
 
         }
 
+       
+       [HttpGet("list")]
+       public IActionResult GetProductsFromQueryList([FromQuery] string category="" , 
+                                                   [FromQuery] float price=0 )
+       {
+           return Ok(ProductList.Where(x => x.Category.ToLower().Contains(category)).Where(x => x.Price >= price));
+       }
+
+
+
+        [HttpGet("sort")]
+        public IActionResult GetEmployeesFromQuerySort([FromQuery] bool id = false,
+                                                   [FromQuery] bool category = false,
+                                                   [FromQuery] bool name = false,
+                                                   [FromQuery] bool price = false,
+                                                   [FromQuery] bool stock = false)
+        {
+            if (id)
+            {
+                return Ok(ProductList.OrderBy(x => x.Id));
+            }
+            else if (category)
+            {
+                return Ok(ProductList.OrderBy(x => x.Category));
+            }
+            else if (name)
+            {
+                return Ok(ProductList.OrderBy(x => x.Name));
+            }
+            else if (price)
+            {
+                return Ok(ProductList.OrderBy(x => x.Price));
+            }
+            else if (stock)
+            {
+                return Ok(ProductList.OrderBy(x => x.Stock));
+            }
+            else
+            {
+                return BadRequest("Sorting type is not valid");
+            }
+
+        }
+
+
         [HttpGet("{id}")]
-        public Product GetById(int id)
+        public IActionResult GetById(int id)
         {
 
             var product = ProductList.Where(product => product.Id == id).SingleOrDefault();
-            return product;
+
+            if (product is null)
+                return BadRequest("Invalid id value");
+
+            return Ok(product);
 
         }
-        //[HttpGet]
-        //public Product Getter([FromQuery] string id)
-        //{
 
-        //    var product = ProductList.Where(product => product.Id == Convert.ToInt32(id)).SingleOrDefault();
-        //    return product;
-
-        //}
 
         [HttpPost]
 
         public IActionResult AddProduct([FromBody] Product newProduct)
         {
+            var maxId = ProductList.Max(p => p.Id);
 
-            var product = ProductList.SingleOrDefault(x => x.Id == newProduct.Id);
+            var findProduct= ProductList.SingleOrDefault(x => x.Id == newProduct.Id);
 
-            if (product is not null)
-                return BadRequest();
+            if (findProduct is not null)
+            {
+                for (int i = 0; i < ProductList.Count; i++)
+                {
+                    if (ProductList[i].Id.Equals(newProduct.Id)){
+                        ProductList[i].Stock++;
+                            return Ok(ProductList[i]);
+                    }
+                }
+            }
 
-            ProductList.Add(newProduct);
-            return Ok();
+            ProductList.Add(new Product()
+            {
+                Id = maxId+1,
+                Category = newProduct.Category,
+                Name = newProduct.Name,
+                Price = newProduct.Price,
+                Stock = newProduct.Stock,
+                IsDeleted = newProduct.IsDeleted   
+
+            });
+
+            return Created("", ProductList.Last());
+
 
         }
 
